@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_absolute_error
 
 df = pd.read_csv("flight_data.csv")
 
@@ -45,3 +48,26 @@ y_val = val[label]
 
 X_test = test[features]
 y_test = test[label]
+
+print(X_train.describe().loc[["min", "max", "std"]])
+
+lin = LinearRegression()
+lin.fit(X_train, y_train)
+
+print("raw    train", mean_absolute_error(y_train, lin.predict(X_train)))
+print("raw    val", mean_absolute_error(y_val, lin.predict(X_val)))
+
+scaler = StandardScaler()
+X_train_s = scaler.fit_transform(X_train)
+X_val_s = scaler.transform(X_val)
+
+lin_s = LinearRegression()
+lin_s.fit(X_train_s, y_train)
+
+print("scaled train", mean_absolute_error(y_train, lin_s.predict(X_train_s)))
+print("scaled val", mean_absolute_error(y_val, lin_s.predict(X_val_s)))
+
+for name, coef in zip(features, lin_s.coef_):
+    print(name, round(coef, 3))
+
+print("intercept", round(lin.intercept_, 3))
