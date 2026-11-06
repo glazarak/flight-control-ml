@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error
+from sklearn.ensemble import RandomForestRegressor
 
 df = pd.read_csv("flight_data.csv")
 
@@ -67,7 +68,21 @@ lin_s.fit(X_train_s, y_train)
 print("scaled train", mean_absolute_error(y_train, lin_s.predict(X_train_s)))
 print("scaled val", mean_absolute_error(y_val, lin_s.predict(X_val_s)))
 
-for name, coef in zip(features, lin_s.coef_):
+for name, coef in zip(features, lin.coef_):
     print(name, round(coef, 3))
 
 print("intercept", round(lin.intercept_, 3))
+
+
+rf = RandomForestRegressor(n_estimators=100, random_state=42)
+rf.fit(X_train, y_train)
+
+print("forest train", mean_absolute_error(y_train, rf.predict(X_train)))
+print("forest val", mean_absolute_error(y_val, rf.predict(X_val)))
+
+print(X_train.agg(["min", "max"]).round(2))
+print(X_val.agg(["min", "max"]).round(2))
+
+print("train thrust range:", y_train.min().round(2), y_train.max().round(2))
+print("forest predictions:", rf.predict(X_val).min().round(2), rf.predict(X_val).max().round(2))
+print("true val thrust:", y_val.min().round(2), y_val.max().round(2))
