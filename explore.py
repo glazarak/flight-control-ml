@@ -4,6 +4,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor
+import matplotlib.pyplot as plt
 
 df = pd.read_csv("flight_data.csv")
 
@@ -86,3 +88,27 @@ print(X_val.agg(["min", "max"]).round(2))
 print("train thrust range:", y_train.min().round(2), y_train.max().round(2))
 print("forest predictions:", rf.predict(X_val).min().round(2), rf.predict(X_val).max().round(2))
 print("true val thrust:", y_val.min().round(2), y_val.max().round(2))
+
+depths = range(1, 21)
+train_errors = []
+val_errors = []
+
+for d in depths:
+    tree = DecisionTreeRegressor(max_depth=d, random_state=42)
+    tree.fit(X_train, y_train)
+
+    train_errors.append(mean_absolute_error(y_train, tree.predict(X_train)))
+    val_errors.append(mean_absolute_error(y_val, tree.predict(X_val)))
+
+    print(d, round(train_errors[-1], 3), round(val_errors[-1], 3))
+
+plt.figure()
+plt.plot(list(depths), train_errors, marker='o', label="train")
+plt.plot(list(depths), val_errors, marker='o', label="validation")
+plt.axhline(y=0, color="green", linestyle="--", label="linear regression (val)")
+plt.xlabel("max depth")
+plt.ylabel("mean absolute error (N)")
+plt.title("Decision Tree: train vs validation error by depth")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.savefig("overfitting_curve.png", dpi=150, bbox_inches="tight")
