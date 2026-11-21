@@ -16,10 +16,6 @@ print(df["target_x"].nunique())
 
 features = ["x", "y", "velocity_x", "velocity_y", "target_x", "target_y"]
 
-X = df[features]
-y = df["thrust_x"]
-
-print(X.shape, y.shape)
 
 df["flight"] = df.index // 500
 
@@ -112,3 +108,4 @@ plt.title("Decision Tree: train vs validation error by depth")
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.savefig("overfitting_curve.png", dpi=150, bbox_inches="tight")
+
