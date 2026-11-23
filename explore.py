@@ -24,8 +24,8 @@ features = ["x", "y", "velocity_x", "velocity_y", "target_x", "target_y"]
 
 df["flight"] = df.index // 500
 
-print(df["flight"].nunique())
-print(df.groupby("flight")["target_x"].nunique().unique())
+print(df["flight"].nunique()) # how many distinct flights
+print(df.groupby("flight")["target_x"].nunique().unique()) # how many targets in each flight (should be 1 for each)
 
 
 
@@ -55,11 +55,15 @@ y_test = test[label]
 
 print(X_train.describe().loc[["min", "max", "std"]])
 
+# Linear Regression
+
 lin = LinearRegression()
 lin.fit(X_train, y_train) # trains the model with the training flights only
 
 print("raw    train", mean_absolute_error(y_train, lin.predict(X_train)))
 print("raw    val", mean_absolute_error(y_val, lin.predict(X_val)))
+
+# Linear Regression with Standard Scaling
 
 scaler = StandardScaler()
 X_train_s = scaler.fit_transform(X_train)
@@ -76,6 +80,7 @@ for name, coef in zip(features, lin.coef_):
 
 print("intercept", round(lin.intercept_, 3))
 
+# Random Forest
 
 rf = RandomForestRegressor(n_estimators=100, random_state=42)
 rf.fit(X_train, y_train)
@@ -83,12 +88,14 @@ rf.fit(X_train, y_train)
 print("forest train", mean_absolute_error(y_train, rf.predict(X_train)))
 print("forest val", mean_absolute_error(y_val, rf.predict(X_val)))
 
-print(X_train.agg(["min", "max"]).round(2))
-print(X_val.agg(["min", "max"]).round(2))
+print(X_train.describe().loc[["min", "max"]].round(2))
+print(X_val.describe().loc[["min", "max"]].round(2))
 
 print("train thrust range:", y_train.min().round(2), y_train.max().round(2))
 print("forest predictions:", rf.predict(X_val).min().round(2), rf.predict(X_val).max().round(2))
 print("true val thrust:", y_val.min().round(2), y_val.max().round(2))
+
+# Decision Tree
 
 depths = range(1, 21)
 train_errors = []
@@ -114,14 +121,14 @@ plt.legend()
 plt.grid(True, alpha=0.3)
 plt.savefig("overfitting_curve.png", dpi=150, bbox_inches="tight")
 
+# Cross-validation with GroupKFold
 
 dev =df[~df["flight"].isin(test_flights)] # keep every row that is not in the test flights (~ converts all TRUE values to FALSE and the opposite)
 
 X_dev = dev[features]
 y_dev = dev[label]
 
-groups = dev["flight"] # grouping variable for GroupKFold, which ensures that the same flight does not appear in both training and validation sets during cross-validation
-
+groups = dev["flight"] # grouping variable for GroupKFold
 gkf = GroupKFold(n_splits=4) # 16 flights in dev, so 4 splits will give 4 flights per fold
 
 rf_scores = cross_val_score(RandomForestRegressor(n_estimators=100, random_state=42), X_dev, y_dev, groups=groups, cv=gkf, scoring="neg_mean_absolute_error")
